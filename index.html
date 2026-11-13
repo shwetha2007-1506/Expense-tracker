@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClearLedger — Expense Tracker</title>
+    <meta
+      name="description"
+      content="A clean, minimalist personal expense tracker, budget manager, and financial analytics dashboard built with HTML5, CSS3, and Vanilla JavaScript."
+    />
+    <meta property="og:title" content="ClearLedger — Expense Tracker" />
+    <meta
+      property="og:description"
+      content="A clean, minimalist personal expense tracker, budget manager, and financial analytics dashboard built with HTML5, CSS3, and Vanilla JavaScript."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="./assets/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <!-- Mobile Backdrop -->
+      <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+      <!-- Sidebar Navigation -->
+      <aside id="app-sidebar" class="sidebar" aria-label="Primary Navigation">
+        <div class="sidebar-brand">
+          <a href="#dashboard" class="brand-link" data-nav="dashboard">
+            <img src="./assets/logo.svg" alt="ClearLedger logo" class="brand-logo" width="28" height="28" />
+            <span class="brand-name">ClearLedger</span>
+          </a>
+          <button
+            type="button"
+            id="close-sidebar-btn"
+            class="icon-btn mobile-only"
+            aria-label="Close navigation menu"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button type="button" class="nav-item active" data-nav="dashboard" aria-current="page">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Dashboard</span>
+          </button>
+          <button type="button" class="nav-item" data-nav="transactions">
+            <i data-lucide="arrow-left-right"></i>
+            <span>Transactions</span>
+          </button>
+          <button type="button" class="nav-item" data-nav="analytics">
+            <i data-lucide="bar-chart-3"></i>
+            <span>Analytics</span>
+          </button>
+          <button type="button" class="nav-item" data-nav="budget">
+            <i data-lucide="wallet"></i>
+            <span>Budget</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-section-label">Active Period</div>
+          <label for="global-month-select" class="sr-only">Select active month</label>
+          <select id="global-month-select" class="select-control sidebar-select"></select>
+
+          <div class="sidebar-utility-actions">
+            <button type="button" id="export-csv-btn" class="btn-ghost btn-sm">
+              <i data-lucide="download"></i>
+              <span>Export CSV</span>
+            </button>
+            <button type="button" id="reset-demo-btn" class="btn-ghost btn-sm">
+              <i data-lucide="rotate-ccw"></i>
+              <span>Reset Data</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Workspace -->
+      <div class="main-wrapper">
+        <!-- Top Navigation Bar -->
+        <header class="topbar">
+          <div class="topbar-left">
+            <button
+              type="button"
+              id="open-sidebar-btn"
+              class="icon-btn mobile-only"
+              aria-label="Open navigation menu"
+            >
+              <i data-lucide="menu"></i>
+            </button>
+            <div class="topbar-title-group">
+              <h1 id="page-title" class="page-title">Dashboard</h1>
+              <span class="topbar-separator" aria-hidden="true">/</span>
+              <span id="page-period-label" class="page-subtitle">November 2026</span>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <button type="button" id="open-add-modal-btn" class="btn-primary">
+              <i data-lucide="plus"></i>
+              <span>Add Transaction</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Dynamic View Container -->
+        <main id="main-content" class="main-content" tabindex="-1">
+          <!-- View 1: Dashboard -->
+          <section id="view-dashboard" class="view-section active" aria-labelledby="page-title"></section>
+
+          <!-- View 2: Transactions -->
+          <section id="view-transactions" class="view-section" hidden></section>
+
+          <!-- View 3: Analytics -->
+          <section id="view-analytics" class="view-section" hidden></section>
+
+          <!-- View 4: Budget -->
+          <section id="view-budget" class="view-section" hidden></section>
+        </main>
+      </div>
+    </div>
+
+    <!-- Add / Edit Transaction Modal -->
+    <div
+      id="transaction-modal"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="transaction-modal-title"
+      hidden
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 id="transaction-modal-title" class="modal-title">Add Transaction</h2>
+          <button
+            type="button"
+            id="close-transaction-modal-btn"
+            class="icon-btn"
+            aria-label="Close modal"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <form id="transaction-form" class="modal-body" novalidate>
+          <input type="hidden" id="tx-id" name="id" />
+
+          <!-- Type Segmented Selector -->
+          <div class="form-group">
+            <span class="form-label">Transaction Type</span>
+            <div class="segmented-control" role="radiogroup" aria-label="Transaction Type">
+              <button
+                type="button"
+                class="segmented-btn active"
+                data-tx-type="expense"
+                aria-pressed="true"
+              >
+                Expense
+              </button>
+              <button
+                type="button"
+                class="segmented-btn"
+                data-tx-type="income"
+                aria-pressed="false"
+              >
+                Income
+              </button>
+            </div>
+            <input type="hidden" id="tx-type" name="type" value="expense" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="tx-title" class="form-label">Title</label>
+              <input
+                type="text"
+                id="tx-title"
+                name="title"
+                class="input-control"
+                placeholder="e.g. Grocery Shopping"
+                maxlength="80"
+                required
+              />
+              <p id="error-tx-title" class="field-error" hidden></p>
+            </div>
+
+            <div class="form-group">
+              <label for="tx-amount" class="form-label">Amount ($)</label>
+              <input
+                type="number"
+                id="tx-amount"
+                name="amount"
+                class="input-control mono-input"
+                placeholder="0.00"
+                step="0.01"
+                min="0.01"
+                required
+              />
+              <p id="error-tx-amount" class="field-error" hidden></p>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="tx-category" class="form-label">Category</label>
+              <select id="tx-category" name="category" class="select-control" required></select>
+              <p id="error-tx-category" class="field-error" hidden></p>
+            </div>
+
+            <div class="form-group">
+              <label for="tx-date" class="form-label">Date</label>
+              <input type="date" id="tx-date" name="date" class="input-control mono-input" required />
+              <p id="error-tx-date" class="field-error" hidden></p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="tx-description" class="form-label">Description</label>
+            <textarea
+              id="tx-description"
+              name="description"
+              class="textarea-control"
+              rows="3"
+              maxlength="240"
+              placeholder="Optional notes about this transaction"
+            ></textarea>
+            <p id="error-tx-description" class="field-error" hidden></p>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" id="cancel-transaction-btn" class="btn-secondary">Cancel</button>
+            <button type="submit" id="save-transaction-btn" class="btn-primary">
+              Save Transaction
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal (Delete / Reset) -->
+    <div
+      id="confirm-modal"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-modal-title"
+      hidden
+    >
+      <div class="modal-dialog modal-dialog-sm">
+        <div class="modal-header">
+          <h2 id="confirm-modal-title" class="modal-title">Confirm Action</h2>
+          <button
+            type="button"
+            id="close-confirm-modal-btn"
+            class="icon-btn"
+            aria-label="Close confirmation dialog"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="confirm-modal-message" class="confirm-message"></p>
+          <div id="confirm-modal-extra" class="confirm-extra" hidden></div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-confirm-btn" class="btn-secondary">Cancel</button>
+            <button type="button" id="confirm-secondary-btn" class="btn-secondary" hidden>
+              Clear All
+            </button>
+            <button type="button" id="confirm-action-btn" class="btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- CDN Libraries: Chart.js and Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
